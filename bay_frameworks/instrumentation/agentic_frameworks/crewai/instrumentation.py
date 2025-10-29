@@ -18,7 +18,7 @@ from MYSDK.bay_frameworks.instrumentation.common import (
 	set_token_usage_attributes,
 	TokenUsageExtractor,
 )
-from MYSDK.bay_frameworks.semconv import SpanAttributes, AgentOpsSpanKindValues, ToolAttributes, MessageAttributes
+from MYSDK.bay_frameworks.semconv import SpanAttributes, AgentBaySpanKindValues, ToolAttributes, MessageAttributes
 from MYSDK.bay_frameworks.semconv.core import CoreAttributes
 
 
@@ -135,7 +135,7 @@ def wrap_agent_execute_task_impl(tracer, metrics, attr_manager, wrapped, instanc
 		tracer,
 		f"{agent_name}.agent",
 		kind=SpanKind.CLIENT,
-		attributes={SpanAttributes.BAYFW_SPAN_KIND: AgentOpsSpanKindValues.AGENT.value},
+        attributes={SpanAttributes.BAYFW_SPAN_KIND: AgentBaySpanKindValues.AGENT.value},
 		attribute_manager=attr_manager,
 	) as span:
 		result = wrapped(*args, **kwargs)
@@ -149,7 +149,7 @@ def wrap_task_execute_impl(tracer, metrics, attr_manager, wrapped, instance, arg
 		tracer,
 		f"{task_name}.task",
 		kind=SpanKind.CLIENT,
-		attributes={SpanAttributes.BAYFW_SPAN_KIND: AgentOpsSpanKindValues.TASK.value},
+        attributes={SpanAttributes.BAYFW_SPAN_KIND: AgentBaySpanKindValues.TASK.value},
 		attribute_manager=attr_manager,
 	) as span:
 		result = wrapped(*args, **kwargs)
@@ -182,11 +182,11 @@ def wrap_tool_execution_impl(tracer, metrics, attr_manager, wrapped, instance, a
 			tracer,
 			f"{tool_name}.tool",
 			kind=SpanKind.CLIENT,
-			attributes={
-				SpanAttributes.BAYFW_SPAN_KIND: "tool",
-				ToolAttributes.TOOL_NAME: tool_name,
-				ToolAttributes.TOOL_PARAMETERS: str(tool_input),
-			},
+            attributes={
+                SpanAttributes.BAYFW_SPAN_KIND: AgentBaySpanKindValues.TOOL.value,
+                ToolAttributes.TOOL_NAME: tool_name,
+                ToolAttributes.TOOL_PARAMETERS: str(tool_input),
+            },
 			attribute_manager=attr_manager,
 		) as span:
 			result = wrapped(*args, **kwargs)
