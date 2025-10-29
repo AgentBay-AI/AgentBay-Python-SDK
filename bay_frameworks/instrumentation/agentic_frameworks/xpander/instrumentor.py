@@ -21,7 +21,7 @@ from MYSDK.bay_frameworks.instrumentation.common.wrappers import (
 )
 from MYSDK.bay_frameworks.helpers.serialization import safe_serialize, model_to_dict
 from MYSDK.bay_frameworks.instrumentation.agentic_frameworks.xpander.context import XpanderContext
-from MYSDK.bay_frameworks.semconv import SpanAttributes, SpanKind, ToolAttributes
+from MYSDK.bay_frameworks.semconv import SpanAttributes, SpanKind, ToolAttributes, AgentBaySpanKindValues
 from MYSDK.bay_frameworks.semconv.message import MessageAttributes
 from MYSDK.bay_frameworks.logging import logger
 
@@ -358,12 +358,12 @@ class XpanderInstrumentor(CommonInstrumentor):
 			})
 			current_span = trace.get_current_span()
 			execution_span_context = trace.set_span_in_context(current_span) if current_span else None
-			with instrumentor._tracer.start_as_current_span(
+            with instrumentor._tracer.start_as_current_span(
 				"xpander.execution",
 				kind=OTelSpanKind.INTERNAL,
 				context=execution_span_context,
 				attributes={
-					SpanAttributes.BAYFW_SPAN_KIND: SpanKind.TASK,
+                    SpanAttributes.BAYFW_SPAN_KIND: AgentBaySpanKindValues.TASK.value,
 					"xpander.span.type": "execution",
 					"xpander.workflow.phase": "executing",
 					"xpander.step.number": step_num,
@@ -376,12 +376,12 @@ class XpanderInstrumentor(CommonInstrumentor):
 					tool_name = instrumentor._extract_tool_name(tool_call)
 					tool_params = instrumentor._extract_tool_params(tool_call)
 					tool_span_context = trace.set_span_in_context(execution_span)
-					with instrumentor._tracer.start_as_current_span(
+                    with instrumentor._tracer.start_as_current_span(
 						f"tool.{tool_name}",
 						kind=OTelSpanKind.CLIENT,
 						context=tool_span_context,
 						attributes={
-							SpanAttributes.BAYFW_SPAN_KIND: SpanKind.TOOL,
+                            SpanAttributes.BAYFW_SPAN_KIND: AgentBaySpanKindValues.TOOL.value,
 							ToolAttributes.TOOL_NAME: tool_name,
 							ToolAttributes.TOOL_PARAMETERS: str(tool_params)[:500],
 							"xpander.span.type": "tool",
@@ -418,12 +418,12 @@ class XpanderInstrumentor(CommonInstrumentor):
 			workflow_span = instrumentor._context.get_workflow_span(session_id)
 			llm_span_context = trace.set_span_in_context(workflow_span) if workflow_span else None
 			result = original_method(self, messages)
-			with instrumentor._tracer.start_as_current_span(
+            with instrumentor._tracer.start_as_current_span(
 				f"llm.{current_phase}",
 				kind=OTelSpanKind.CLIENT,
 				context=llm_span_context,
 				attributes={
-					SpanAttributes.BAYFW_SPAN_KIND: SpanKind.LLM,
+                    SpanAttributes.BAYFW_SPAN_KIND: AgentBaySpanKindValues.LLM.value,
 					"xpander.span.type": "llm",
 					"xpander.workflow.phase": current_phase,
 					"xpander.session.id": session_id,
