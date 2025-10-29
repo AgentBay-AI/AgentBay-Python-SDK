@@ -1,7 +1,7 @@
 from typing import Optional, Tuple, Dict, Any
 from MYSDK.bay_frameworks.instrumentation.common.attributes import AttributeMap
 from MYSDK.bay_frameworks.semconv import SpanAttributes, AgentAttributes, ToolAttributes
-from MYSDK.bay_frameworks.semconv.span_kinds import AgentOpsSpanKindValues as AgentOpsSpanKind
+from MYSDK.bay_frameworks.semconv.span_kinds import AgentBaySpanKindValues as AgentBaySpanKind
 import json
 
 
@@ -12,7 +12,7 @@ def get_agent_run_attributes(
 ) -> AttributeMap:
 	attributes: AttributeMap = {}
 	agent_name = None
-	attributes[SpanAttributes.BAYFW_SPAN_KIND] = AgentOpsSpanKind.AGENT.value
+    attributes[SpanAttributes.BAYFW_SPAN_KIND] = AgentBaySpanKind.AGENT.value
 	attributes[SpanAttributes.LLM_SYSTEM] = "agno"
 	attributes[SpanAttributes.BAYFW_ENTITY_NAME] = "agent"
 	if args and len(args) >= 1:
