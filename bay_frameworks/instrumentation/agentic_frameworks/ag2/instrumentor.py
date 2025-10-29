@@ -19,7 +19,7 @@ from MYSDK.bay_frameworks.instrumentation.common import (
 from MYSDK.bay_frameworks.instrumentation.agentic_frameworks.ag2 import LIBRARY_NAME, LIBRARY_VERSION
 from MYSDK.bay_frameworks.semconv.message import MessageAttributes
 from MYSDK.bay_frameworks.semconv.span_attributes import SpanAttributes
-from MYSDK.bay_frameworks.semconv.span_kinds import AgentOpsSpanKindValues
+from MYSDK.bay_frameworks.semconv.span_kinds import AgentBaySpanKindValues
 from MYSDK.bay_frameworks.semconv.agent import AgentAttributes
 from MYSDK.bay_frameworks.semconv.workflow import WorkflowAttributes
 from MYSDK.bay_frameworks.semconv.tool import ToolAttributes
