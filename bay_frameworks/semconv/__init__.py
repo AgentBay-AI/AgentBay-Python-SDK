@@ -10,7 +10,7 @@ from MYSDK.bay_frameworks.semconv.instrumentation import InstrumentationAttribut
 from MYSDK.bay_frameworks.semconv.enum import LLMRequestTypeValues
 from MYSDK.bay_frameworks.semconv.span_attributes import SpanAttributes
 from MYSDK.bay_frameworks.semconv.meters import Meters
-from MYSDK.bay_frameworks.semconv.span_kinds import AgentOpsSpanKindValues
+from MYSDK.bay_frameworks.semconv.span_kinds import AgentBaySpanKindValues
 from MYSDK.bay_frameworks.semconv.resource import ResourceAttributes
 from MYSDK.bay_frameworks.semconv.message import MessageAttributes
 from MYSDK.bay_frameworks.semconv.langchain import LangChainAttributes, LangChainAttributeValues
@@ -28,7 +28,7 @@ __all__ = [
 	"LLMRequestTypeValues",
 	"SpanAttributes",
 	"Meters",
-	"AgentOpsSpanKindValues",
+    "AgentBaySpanKindValues",
 	"ResourceAttributes",
 	"MessageAttributes",
 	"LangChainAttributes",
