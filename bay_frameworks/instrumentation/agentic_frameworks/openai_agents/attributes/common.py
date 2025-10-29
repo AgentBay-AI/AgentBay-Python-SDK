@@ -1,13 +1,13 @@
 from typing import Any, List, Dict, Optional
 from MYSDK.bay_frameworks.logging import logger
 from MYSDK.bay_frameworks.semconv import (
-	AgentAttributes,
-	WorkflowAttributes,
-	SpanAttributes,
-	InstrumentationAttributes,
-	ToolAttributes,
-	AgentOpsSpanKindValues,
-	ToolStatus,
+    AgentAttributes,
+    WorkflowAttributes,
+    SpanAttributes,
+    InstrumentationAttributes,
+    ToolAttributes,
+    AgentBaySpanKindValues,
+    ToolStatus,
 )
 from MYSDK.bay_frameworks.helpers import safe_serialize
 
@@ -128,7 +128,7 @@ def get_common_instrumentation_attributes() -> AttributeMap:
 def get_agent_span_attributes(span_data: Any) -> AttributeMap:
 	attributes = {}
 	attributes.update(get_common_attributes())
-	attributes[SpanAttributes.BAYFW_SPAN_KIND] = AgentOpsSpanKindValues.AGENT.value
+    attributes[SpanAttributes.BAYFW_SPAN_KIND] = AgentBaySpanKindValues.AGENT.value
 	if hasattr(span_data, "name") and span_data.name:
 		attributes[AgentAttributes.AGENT_NAME] = str(span_data.name)
 	if hasattr(span_data, "handoffs") and span_data.handoffs:
@@ -141,7 +141,7 @@ def get_agent_span_attributes(span_data: Any) -> AttributeMap:
 def get_function_span_attributes(span_data: Any) -> AttributeMap:
 	attributes = _extract_attributes_from_mapping(span_data, FUNCTION_SPAN_ATTRIBUTES)
 	attributes.update(get_common_attributes())
-	attributes[SpanAttributes.BAYFW_SPAN_KIND] = AgentOpsSpanKindValues.TOOL.value
+    attributes[SpanAttributes.BAYFW_SPAN_KIND] = AgentBaySpanKindValues.TOOL.value
 	if hasattr(span_data, "error") and span_data.error:
 		attributes[ToolAttributes.TOOL_STATUS] = ToolStatus.FAILED.value
 	else:
@@ -212,7 +212,7 @@ def get_response_span_attributes(span_data: Any) -> AttributeMap:
 			prompt_messages = _build_prompt_messages_from_input(span_data.input)
 			if prompt_messages:
 				attributes.update(_get_llm_messages_attributes(prompt_messages, "gen_ai.prompt"))
-	attributes[SpanAttributes.BAYFW_SPAN_KIND] = AgentOpsSpanKindValues.LLM.value
+    attributes[SpanAttributes.BAYFW_SPAN_KIND] = AgentBaySpanKindValues.LLM.value
 	return attributes
 
 
@@ -249,7 +249,7 @@ def get_generation_span_attributes(span_data: Any) -> AttributeMap:
 		attributes.update(get_generation_output_attributes(span_data.output))
 	if span_data.model_config:
 		attributes.update(get_model_config_attributes(span_data.model_config))
-	attributes[SpanAttributes.BAYFW_SPAN_KIND] = AgentOpsSpanKindValues.LLM.value
+    attributes[SpanAttributes.BAYFW_SPAN_KIND] = AgentBaySpanKindValues.LLM.value
 	return attributes
 
 
