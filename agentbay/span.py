@@ -1,0 +1,1 @@
+# Handles all the span management for the AgentBay SDK i.e. start, end, etc.
