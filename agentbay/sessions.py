@@ -1,0 +1,1 @@
+# Handles all the session management for the AgentBay SDK
