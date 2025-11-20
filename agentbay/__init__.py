@@ -1,0 +1,18 @@
+from typing import Optional
+from .client import AgentBay
+
+def init(api_key: Optional[str] = None, api_url: Optional[str] = None) -> AgentBay:
+    """
+    Initialize the AgentBay SDK.
+    
+    Args:
+        api_key: Your AgentBay API Key. If not provided, reads from AGENTBAY_API_KEY env var.
+        api_url: Optional URL for the AgentBay backend (mostly for testing/on-prem).
+    
+    Returns:
+        The initialized AgentBay client instance.
+    """
+    return AgentBay.initialize(api_key=api_key, api_url=api_url)
+
+__all__ = ["init", "AgentBay"]
+
