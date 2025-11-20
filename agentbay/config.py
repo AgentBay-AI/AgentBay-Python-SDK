@@ -6,17 +6,9 @@ class Config:
     Configuration settings for the AgentBay SDK.
     Handles API keys and endpoint URLs.
     """
-    def __init__(
-        self, 
-        api_key: Optional[str] = None, 
-        api_url: Optional[str] = None
-    ):
-        # 1. Try to get the API Key from the arguments first.
-        # 2. If not provided, try to get it from the environment variables.
-        self.api_key = api_key or os.environ.get("AGENTBAY_API_KEY")
-        
-        # Set the API URL (defaulting to the hosted version if not changed)
-        self.api_url = api_url or os.environ.get("AGENTBAY_API_URL", "https://api.agentbay.dev")
+    def __init__(self, api_key: Optional[str] = None, api_url: Optional[str] = None):
+        self.api_key = api_key or os.environ.get("AGENTBAY_API_KEY") # Try to get the API Key from the arguments first, if not provided, try to get it from the environment variables.
+        self.api_url = api_url or os.environ.get("AGENTBAY_API_URL", "https://api.agentbay.dev") # Set the API URL (defaulting to the hosted version if not changed)
 
     def validate(self):
         """
