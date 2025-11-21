@@ -3,6 +3,8 @@ import time
 from agentbay.sessions import Session
 from agentbay.span import Span
 
+# Unit tests for the data models i.e. session and span
+
 class TestDataModels(unittest.TestCase):
     
     def test_session_lifecycle(self):
