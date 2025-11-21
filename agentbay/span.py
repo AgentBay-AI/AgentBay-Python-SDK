@@ -6,18 +6,12 @@ class Span:
     """
     Represents a single unit of work (e.g., an LLM call, a tool execution).
     """
-    def __init__(
-        self, 
-        session_id: str, 
-        name: str, 
-        input_data: Optional[Union[str, Dict[str, Any]]] = None
-    ):
+    def __init__(self, session_id: str, name: str, input_data: Optional[Union[str, Dict[str, Any]]] = None):
         self.span_id = str(uuid.uuid4())
         self.session_id = session_id
         self.name = name
         self.input = input_data
         self.output: Optional[Union[str, Dict[str, Any]]] = None
-        
         self.start_time = time.time()
         self.end_time: Optional[float] = None
         self.status = "active"  # active, success, error
