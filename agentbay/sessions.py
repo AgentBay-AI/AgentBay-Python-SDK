@@ -1,11 +1,31 @@
-# Handles all the session management for the AgentBay SDK
 import uuid
-import time from timestamp
+import time
+from typing import Optional, Dict, Any
 
 class Session:
+    """
+    Represents a single tracking session (e.g., a conversation or a task).
+    """
+    def __init__(self, session_id: Optional[str] = None):
+        self.session_id = session_id or str(uuid.uuid4())
+        self.start_time = time.time()
+        self.end_time: Optional[float] = None
+        self.status = "active"  # active, completed, failed
 
-    def __init__(self, session_id: str, start_time: float, end_time: float, status: str):
-        self.session_id = session_id
-        self.start_time = start_time
-        self.end_time = end_time
+    def end(self, status: str = "completed"):
+        """
+        Ends the session.
+        """
+        self.end_time = time.time()
         self.status = status
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Converts the session to a dictionary for API transmission.
+        """
+        return {
+            "id": self.session_id,
+            "start_time": self.start_time,
+            "end_time": self.end_time,
+            "status": self.status
+        }
