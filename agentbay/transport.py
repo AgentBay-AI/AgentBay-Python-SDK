@@ -76,7 +76,7 @@ class Transport:
         """
         import requests
         
-        url = f"{self.config.api_url}/v1/telemetry"
+        url = f"{self.config.api_url}/v1/telemetry" # API URL for the AgentBay backend, needs to be configured 
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.config.api_key}"
