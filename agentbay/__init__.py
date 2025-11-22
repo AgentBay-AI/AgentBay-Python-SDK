@@ -1,5 +1,6 @@
 from typing import Optional
 from .client import AgentBay
+from .decorators import trace
 
 def init(api_key: Optional[str] = None, api_url: Optional[str] = None) -> AgentBay:
     """
@@ -14,5 +15,4 @@ def init(api_key: Optional[str] = None, api_url: Optional[str] = None) -> AgentB
     """
     return AgentBay.initialize(api_key=api_key, api_url=api_url)
 
-__all__ = ["init", "AgentBay"]
-
+__all__ = ["init", "AgentBay", "trace"]
