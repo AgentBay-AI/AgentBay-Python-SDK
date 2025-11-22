@@ -1,0 +1,1 @@
+# Handles the embeddings functionality for the OpenAI LLM
