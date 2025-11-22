@@ -49,6 +49,42 @@ class Transport:
         The main loop for the background thread.
         """
         while not self._stop_event.is_set():
-            # TODO: In Step 2, we will implement the logic to 
-            # read from self.queue and send via HTTP.
-            time.sleep(0.1)
+            batch = []
+            start_time = time.time()
+            
+            # Collect a batch
+            while len(batch) < self.batch_size:
+                # Check if time is up for this batch
+                if (time.time() - start_time) > self.flush_interval:
+                    break
+                
+                try:
+                    # Wait briefly for new items
+                    item = self.queue.get(timeout=0.5)
+                    batch.append(item)
+                except queue.Empty:
+                    # Queue is empty, continue checking time or stop event
+                    continue
+
+            # If we have data, send it
+            if batch:
+                self._send_batch(batch)
+
+    def _send_batch(self, batch: List[Dict[str, Any]]):
+        """
+        Internal method to send a batch of data via HTTP.
+        """
+        import requests
+        
+        url = f"{self.config.api_url}/v1/telemetry"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.config.api_key}"
+        }
+        
+        try:
+            response = requests.post(url, json=batch, headers=headers, timeout=10)
+            # In a real SDK, we might log errors if response.status_code != 200
+        except Exception as e:
+            # In production, we would log this error or retry
+            print(f"AgentBay SDK Error: Failed to send telemetry: {e}")
