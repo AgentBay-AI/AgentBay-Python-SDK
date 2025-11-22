@@ -1,5 +1,6 @@
 from typing import Optional
 from .config import Config
+from .transport import Transport
 
 class AgentBay:
     """
@@ -10,8 +11,8 @@ class AgentBay:
 
     def __init__(self, config: Config):
         self.config = config
-        # In the future, we will initialize the Transport layer here.
-        # self.transport = Transport(config)
+        self.transport = Transport(config)
+        self.transport.start()
 
     @classmethod
     def initialize(cls, api_key: Optional[str] = None, api_url: Optional[str] = None) -> 'AgentBay':
@@ -37,3 +38,9 @@ class AgentBay:
             )
         return cls._instance
 
+    def shutdown(self):
+        """
+        Stops the background transport thread and flushes remaining data.
+        """
+        if self.transport:
+            self.transport.stop()
