@@ -11,8 +11,8 @@ class AgentBay:
 
     def __init__(self, config: Config):
         self.config = config
-        self.transport = Transport(config)
-        self.transport.start()
+        self.transport = Transport(config) # Initialize the transport layer
+        self.transport.start() # Start the transport thread as soon as the AgentBay client is initialized
 
     @classmethod
     def initialize(cls, api_key: Optional[str] = None, api_url: Optional[str] = None) -> 'AgentBay':
