@@ -47,6 +47,3 @@ chat_with_user("Hello world")
 - **Sessions**: A session represents a single conversation or thread.
 - **Spans**: A span is a single unit of work (like a function call, an LLM request, or a database query).
 - **Transport**: Data is sent asynchronously in the background, so your agent's performance is never impacted.
-
-## 🤝 Contributing
-We welcome contributions! Please check out the `frameworks/` and `llms/` directories for future integrations.
