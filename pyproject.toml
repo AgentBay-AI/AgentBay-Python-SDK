@@ -22,5 +22,5 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://agentbay.dev"
+"Homepage" = "https://agentbay.co"
 "Bug Tracker" = "https://github.com/agentbay/python-sdk/issues"
