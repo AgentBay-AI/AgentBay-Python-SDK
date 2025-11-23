@@ -1,18 +1,47 @@
 from typing import Optional
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+
 from .config import Config
-from .transport import Transport
 
 class AgentBay:
     """
     The main AgentBay client.
-    This is a singleton that manages configuration and data transmission.
+    Manages OpenTelemetry configuration and data transmission.
     """
     _instance: Optional['AgentBay'] = None
 
     def __init__(self, config: Config):
         self.config = config
-        self.transport = Transport(config) # Initialize the transport layer
-        self.transport.start() # Start the transport thread as soon as the AgentBay client is initialized
+        
+        # 1. Create Resource (Metadata about who is sending data)
+        resource = Resource.create(attributes={
+            "service.name": "agentbay-python-sdk",
+            # We can add more metadata here like environment
+        })
+
+        # 2. Initialize Tracer Provider
+        self.tracer_provider = TracerProvider(resource=resource)
+
+        # 3. Configure Exporter
+        # We send data to <api_url>/v1/traces via HTTP/Protobuf
+        # We also pass the API Key as a header
+        endpoint = f"{config.api_url}/v1/traces"
+        exporter = OTLPSpanExporter(
+            endpoint=endpoint,
+            headers={"Authorization": f"Bearer {config.api_key}"}
+        )
+
+        # 4. Add Batch Processor (Background thread for sending)
+        processor = BatchSpanProcessor(exporter)
+        self.tracer_provider.add_span_processor(processor)
+
+        # 5. Register as Global Tracer
+        # This allows trace.get_tracer(__name__) to work anywhere in the user's code
+        trace.set_tracer_provider(self.tracer_provider)
 
     @classmethod
     def initialize(cls, api_key: Optional[str] = None, api_url: Optional[str] = None) -> 'AgentBay':
@@ -29,7 +58,6 @@ class AgentBay:
     def get_instance(cls) -> 'AgentBay':
         """
         Returns the global AgentBay client instance.
-        Raises an error if not initialized.
         """
         if cls._instance is None:
             raise RuntimeError(
@@ -40,7 +68,7 @@ class AgentBay:
 
     def shutdown(self):
         """
-        Stops the background transport thread and flushes remaining data.
+        Flushes remaining spans and shuts down the provider.
         """
-        if self.transport:
-            self.transport.stop()
+        if self.tracer_provider:
+            self.tracer_provider.shutdown()
