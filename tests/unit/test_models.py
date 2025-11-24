@@ -1,3 +1,8 @@
+# IMPORTANT NOTE: These tests are deprecated and will be removed in the future.
+# We are using the OpenTelemetry SDK to send data to the AgentBay backend.
+# The OpenTelemetry SDK is a more robust and feature-rich SDK that is more suited for this purpose.
+# These test were a part of sessions.py and span.py 
+
 import unittest
 import time
 from agentbay.sessions import Session

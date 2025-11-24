@@ -1,3 +1,8 @@
+# IMPORTANT NOTE: This test is deprecated and will be removed in the future.
+# We are using the OpenTelemetry SDK to send data to the AgentBay backend.
+# The OpenTelemetry SDK is a more robust and feature-rich SDK that is more suited for this purpose.
+# This test was a part of transport.py
+
 import unittest
 from unittest.mock import patch, MagicMock
 import time
