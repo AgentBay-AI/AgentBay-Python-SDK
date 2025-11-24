@@ -9,6 +9,9 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 # --- MOCK SETUP START ---
+# We must setup the mocks BEFORE importing the module under test
+# This simulates 'openai' being installed on the system
+
 mock_openai = types.ModuleType("openai")
 mock_resources = types.ModuleType("openai.resources")
 mock_chat = types.ModuleType("openai.resources.chat")
