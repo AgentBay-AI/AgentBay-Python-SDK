@@ -3,11 +3,12 @@ from unittest.mock import MagicMock, patch
 import sys
 import types
 
-# --- MOCK SETUP START ---
-# We must setup the mocks BEFORE importing the module under test
-# This simulates 'openai' being installed on the system
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-# 1. Create the mock OpenAI module structure
+# --- MOCK SETUP START ---
 mock_openai = types.ModuleType("openai")
 mock_resources = types.ModuleType("openai.resources")
 mock_chat = types.ModuleType("openai.resources.chat")
@@ -32,23 +33,28 @@ sys.modules["openai.resources.chat"] = mock_chat
 sys.modules["openai.resources.chat.completions"] = mock_completions_module
 # --- MOCK SETUP END ---
 
-from agentbay import init
 from agentbay.llms.openai import instrument
 from agentbay.llms.openai.chat import instrument_chat
 
 class TestOpenAIChat(unittest.TestCase):
     
+    @classmethod
+    def setUpClass(cls):
+        # Setup OTel for testing
+        cls.exporter = InMemorySpanExporter()
+        cls.provider = TracerProvider()
+        processor = SimpleSpanProcessor(cls.exporter)
+        cls.provider.add_span_processor(processor)
+        trace._set_tracer_provider(cls.provider, log=False)
+
     def setUp(self):
-        self.client = init(api_key="test-key")
-        self.client.transport.send = MagicMock()
-        
-        # Reset the mock create method before each test
+        self.exporter.clear()
         self.mock_create = MagicMock()
-        # We need to replace the method on the CLASS in sys.modules
+        # Update the mock on the class method
         sys.modules["openai.resources.chat.completions"].Completions.create = self.mock_create
         
     def test_instrumentation_wraps_create(self):
-        """Test that calling create() triggers our wrapper."""
+        """Test that calling create() triggers our wrapper and OTel span."""
         
         # 1. Run instrumentation
         instrument_chat(mock_openai)
@@ -60,7 +66,6 @@ class TestOpenAIChat(unittest.TestCase):
         mock_response.usage.completion_tokens = 5
         mock_response.usage.total_tokens = 15
         
-        # The *original* create (which is now wrapped) returns this
         self.mock_create.return_value = mock_response
         
         # 3. Call the method (simulating user code)
@@ -71,19 +76,18 @@ class TestOpenAIChat(unittest.TestCase):
             messages=[{"role": "user", "content": "Hello"}]
         )
         
-        # 4. Verify the response bubbles up correctly
         self.assertEqual(response, mock_response)
         
-        # 5. Verify Transport received data
-        self.assertTrue(self.client.transport.send.called)
+        # 4. Verify OTel Span
+        spans = self.exporter.get_finished_spans()
+        self.assertEqual(len(spans), 1)
         
-        call_args = self.client.transport.send.call_args[0][0]
-        self.assertIn("gpt-4", call_args["name"])
-        self.assertEqual(call_args["status"], "success")
-        
-        output = call_args["output"]
-        self.assertEqual(output["content"], "AI Response")
-        self.assertEqual(output["usage"]["total_tokens"], 15)
+        span = spans[0]
+        self.assertIn("gpt-4", span.name)
+        self.assertEqual(span.attributes["llm.system"], "openai")
+        self.assertEqual(span.attributes["llm.request.model"], "gpt-4")
+        self.assertEqual(span.attributes["llm.response.content"], "AI Response")
+        self.assertEqual(span.attributes["llm.usage.total_tokens"], 15)
 
 if __name__ == "__main__":
     unittest.main()
