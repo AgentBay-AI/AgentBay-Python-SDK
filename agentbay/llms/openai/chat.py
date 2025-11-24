@@ -1,78 +1,59 @@
-from typing import Any, Dict, List
+from typing import Any
 import functools
-from agentbay.client import AgentBay
-from agentbay.span import Span
-from agentbay.sessions import Session
+import json
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
+# Get our tracer
+tracer = trace.get_tracer("agentbay.llms.openai")
 
 def instrument_chat(openai_module: Any):
     """
-    Instruments the OpenAI Chat Completions API.
+    Instruments the OpenAI Chat Completions API with OpenTelemetry.
     """
-    # We want to patch: openai.resources.chat.completions.Completions.create
-    # Note: This path might vary slightly depending on OpenAI SDK version (v1.0+).
-    # We assume the user passes the 'openai' library or we find the class.
-    
     try:
         from openai.resources.chat.completions import Completions
     except ImportError:
-        # User might be on an older version or different structure
         return
 
-    # Save the original method so we don't lose it
     original_create = Completions.create
 
     @functools.wraps(original_create)
     def wrapped_create(self, *args, **kwargs):
-        # 1. Check initialization
-        try:
-            client = AgentBay.get_instance()
-        except RuntimeError:
-            return original_create(self, *args, **kwargs)
-
-        # 2. Prepare Span Data
         model = kwargs.get("model", "unknown")
         messages = kwargs.get("messages", [])
+
+        # Semantic Convention: "chat.completions" or "llm.openai.chat_completions"
+        span_name = f"openai.chat.completions.create {model}"
         
-        # Start Span
-        span = Span(
-            session_id="openai-session", # TODO: Better session handling
-            name=f"openai.chat.completions.create ({model})",
-            input_data={"messages": messages, "model": model}
-        )
-
-        try:
-            # 3. Call Original OpenAI Method
-            response = original_create(self, *args, **kwargs)
+        with tracer.start_as_current_span(span_name) as span:
+            # 1. Record Input Attributes (Semantic Conventions)
+            span.set_attribute("llm.system", "openai")
+            span.set_attribute("llm.request.model", model)
             
-            # 4. Extract Response Data
-            # OpenAI v1 returns Pydantic models, so we can access attributes directly
-            output_content = ""
-            if response.choices:
-                output_content = response.choices[0].message.content
-            
-            usage = {}
-            if response.usage:
-                usage = {
-                    "prompt_tokens": response.usage.prompt_tokens,
-                    "completion_tokens": response.usage.completion_tokens,
-                    "total_tokens": response.usage.total_tokens
-                }
+            # We can serialize complex objects (messages) to string for now
+            # In future, we might map them to specific OTel semantic events
+            span.set_attribute("llm.request.messages", str(messages))
 
-            # 5. End Span Success
-            span.end(
-                output={"content": output_content, "usage": usage},
-                status="success"
-            )
-            return response
+            try:
+                response = original_create(self, *args, **kwargs)
 
-        except Exception as e:
-            # 6. End Span Error
-            span.end(output=str(e), status="error")
-            raise e
-        
-        finally:
-            # 7. Send Data
-            client.transport.send(span.to_dict())
+                # 2. Record Response Attributes
+                if response.choices:
+                    content = response.choices[0].message.content
+                    span.set_attribute("llm.response.content", str(content))
 
-    # Apply the patch
+                if response.usage:
+                    span.set_attribute("llm.usage.prompt_tokens", response.usage.prompt_tokens)
+                    span.set_attribute("llm.usage.completion_tokens", response.usage.completion_tokens)
+                    span.set_attribute("llm.usage.total_tokens", response.usage.total_tokens)
+
+                span.set_status(Status(StatusCode.OK))
+                return response
+
+            except Exception as e:
+                span.record_exception(e)
+                span.set_status(Status(StatusCode.ERROR, str(e)))
+                raise e
+
     Completions.create = wrapped_create
