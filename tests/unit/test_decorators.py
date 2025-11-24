@@ -8,16 +8,20 @@ from agentbay import trace as agentbay_trace
 
 class TestDecorators(unittest.TestCase):
     
-    def setUp(self):
-        # 1. Set up OTel for testing
-        self.exporter = InMemorySpanExporter()
-        self.provider = TracerProvider()
-        processor = SimpleSpanProcessor(self.exporter)
-        self.provider.add_span_processor(processor)
+    @classmethod
+    def setUpClass(cls):
+        # 1. Set up OTel ONCE for the whole class
+        cls.exporter = InMemorySpanExporter()
+        cls.provider = TracerProvider()
+        processor = SimpleSpanProcessor(cls.exporter)
+        cls.provider.add_span_processor(processor)
         
-        # Force reset the global tracer provider for testing purposes
-        # (This is a hack for unit tests because OTel is a singleton)
-        trace._set_tracer_provider(self.provider, log=False)
+        # Force reset the global tracer provider
+        trace._set_tracer_provider(cls.provider, log=False)
+
+    def setUp(self):
+        # Clear spans before each test so we start fresh
+        self.exporter.clear()
 
     def test_trace_success(self):
         """Test that a successful function call is tracked via OTel."""
@@ -60,7 +64,6 @@ class TestDecorators(unittest.TestCase):
         self.assertEqual(span.status.status_code, trace.StatusCode.ERROR)
         
         # Check that we recorded an exception event
-        # We just check that at least one event is an exception
         exception_events = [e for e in span.events if e.name == "exception"]
         self.assertGreaterEqual(len(exception_events), 1)
 
