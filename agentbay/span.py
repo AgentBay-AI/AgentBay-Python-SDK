@@ -1,3 +1,7 @@
+# IMPORTANT NOTE: This span layer is deprecated and will be removed in the future.
+# We are using the OpenTelemetry SDK to send data to the AgentBay backend.
+# The OpenTelemetry SDK is a more robust and feature-rich SDK that is more suited for this purpose.
+
 import uuid
 import time
 from typing import Optional, Dict, Any, Union
