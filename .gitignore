@@ -4,3 +4,16 @@
 # Python
 __pycache__/
 .venv/
+
+# Build Files
+dist/
+build/
+*.egg-info/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pywz
+*.pyzw
+*.pyzwz
