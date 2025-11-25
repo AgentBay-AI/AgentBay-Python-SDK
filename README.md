@@ -4,6 +4,13 @@
 
 The **AgentBay Python SDK** provides a simple, lightweight way to track the performance, traces, sessions, and behavior of AI agents. It sends data using the **OpenTelemetry (OTel)** standard, making it compatible with AgentBay and other observability backends.
 
+This is the **foundation SDK** that enables deep observability for coded agents built with:
+- Pure Python
+- LLM Providers: 
+    - Open AI
+- Frameworks
+    - LangChain
+
 ## 📦 Installation
 
 ```bash
@@ -74,4 +81,4 @@ llm.predict("Hello world")
 
 - **OpenTelemetry**: We use OTel under the hood for maximum compatibility.
 - **Spans**: Every action (function call, LLM request) is recorded as a Span.
-- **Transport**: Data is batched and sent asynchronously to `https://api.agentbay.co/v1/traces`.
+- **Transport**: Data is batched and sent asynchronously to AgentBay Backend service
