@@ -2,12 +2,7 @@
 
 **Management & Observability SDK for AI Agents**
 
-The **AgentBay Python SDK** provides a simple, lightweight way to track the performance, traces, sessions, and behavior of AI agents. It instruments your agent code, LLM calls, and tool executions—sending structured telemetry to the AgentBay backend for analysis and visualization.
-
-This is the **foundation SDK** that enables deep observability for coded agents built with:
-- Pure Python
-- Multiple LLMs
-- Multiple Frameworks
+The **AgentBay Python SDK** provides a simple, lightweight way to track the performance, traces, sessions, and behavior of AI agents. It sends data using the **OpenTelemetry (OTel)** standard, making it compatible with AgentBay and other observability backends.
 
 ## 📦 Installation
 
@@ -27,8 +22,8 @@ import agentbay
 agentbay.init(api_key="your-api-key-here")
 ```
 
-### 2. Track Functions
-Use the `@trace` decorator to automatically track inputs, outputs, execution time, and errors for any function.
+### 2. Manual Tracking (Decorators)
+Use the `@trace` decorator to automatically track any function.
 
 ```python
 from agentbay import trace
@@ -42,8 +37,41 @@ def chat_with_user(query):
 chat_with_user("Hello world")
 ```
 
+### 3. OpenAI Integration
+Automatically track all your OpenAI calls (models, tokens, prompts) with one line of code.
+
+```python
+from agentbay.llms import openai
+
+# Enable OpenAI instrumentation
+openai.instrument()
+
+# Now just use the OpenAI client as normal
+import openai as oa
+client = oa.OpenAI()
+response = client.chat.completions.create(
+    model="gpt-4",
+    messages=[{"role": "user", "content": "Hello"}]
+)
+```
+
+### 4. LangChain Integration
+Automatically track chains, tools, and LLM calls in LangChain.
+
+```python
+from agentbay.frameworks import langchain
+
+# Enable LangChain instrumentation
+langchain.instrument()
+
+# Your existing LangChain code...
+from langchain.llms import OpenAI
+llm = OpenAI()
+llm.predict("Hello world")
+```
+
 ## 🛠️ Core Concepts
 
-- **Sessions**: A session represents a single conversation or thread.
-- **Spans**: A span is a single unit of work (like a function call, an LLM request, or a database query).
-- **Transport**: Data is sent asynchronously in the background, so your agent's performance is never impacted.
+- **OpenTelemetry**: We use OTel under the hood for maximum compatibility.
+- **Spans**: Every action (function call, LLM request) is recorded as a Span.
+- **Transport**: Data is batched and sent asynchronously to `https://api.agentbay.co/v1/traces`.
