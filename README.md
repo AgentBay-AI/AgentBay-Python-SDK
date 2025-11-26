@@ -85,3 +85,5 @@ llm.predict("Hello world")
 
 ## Notes:
 After every version update: python -m build (to build the latest version and update)
+
+Install the sdk for testing:  `pip install git+https://github.com/AgentBay-AI/agentbay-python-sdk.git`
