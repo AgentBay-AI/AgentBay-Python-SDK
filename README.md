@@ -82,3 +82,6 @@ llm.predict("Hello world")
 - **OpenTelemetry**: We use OTel under the hood for maximum compatibility.
 - **Spans**: Every action (function call, LLM request) is recorded as a Span.
 - **Transport**: Data is batched and sent asynchronously to AgentBay Backend service
+
+## Notes:
+After every version update: python -m build (to build the latest version and update)
