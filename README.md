@@ -11,13 +11,13 @@ This is the **foundation SDK** that enables deep observability for coded agents 
 - Frameworks
     - LangChain
 
-## 📦 Installation
+## Installation
 
 ```bash
 pip install agentbay
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Initialize the SDK
 Start by initializing the SDK with your API key. This usually goes at the top of your main application file.
@@ -77,7 +77,7 @@ llm = OpenAI()
 llm.predict("Hello world")
 ```
 
-## 🛠️ Core Concepts
+## Core Concepts
 
 - **OpenTelemetry**: We use OTel under the hood for maximum compatibility.
 - **Spans**: Every action (function call, LLM request) is recorded as a Span.
