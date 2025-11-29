@@ -29,7 +29,7 @@ class AgentBay:
         # 3. Configure Exporter
         # We send data to <api_url>/v1/traces via HTTP/Protobuf
         # We also pass the API Key as a header
-        endpoint = f"{config.api_url}/v1/traces"
+        endpoint = f"{config.api_url}/api/v1/traces"
         exporter = OTLPSpanExporter(
             endpoint=endpoint,
             headers={"Authorization": f"Bearer {config.api_key}"}
