@@ -27,9 +27,8 @@ class AgentBay:
         self.tracer_provider = TracerProvider(resource=resource)
 
         # 3. Configure Exporter
-        # We send data to <api_url>/v1/traces via HTTP/Protobuf
-        # We also pass the API Key as a header
-        endpoint = f"{config.api_url}/api/v1/traces"
+        # We send data to <api_url>/api/v1/traces via HTTP/Protobuf, and also pass the API Key as a header
+        endpoint = f"{config.api_url}/api/v1/traces" 
         exporter = OTLPSpanExporter(
             endpoint=endpoint,
             headers={"Authorization": f"Bearer {config.api_key}"}
