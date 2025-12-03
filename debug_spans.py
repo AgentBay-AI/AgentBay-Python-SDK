@@ -62,7 +62,7 @@ def agent_workflow(user_query):
 print("--- SIMULATING REALISTIC AGENT TRACE ---")
 agent_workflow("Analyze AAPL stock performance")
 print("--- DONE ---")
-print("\nCheck the output above. Your backend will receive:")
+print("\nBackend will receive:")
 print("1. A parent span 'agent.run'")
 print("2. A child span 'tool.search'")
 print("3. A child span 'openai.chat.completions.create'")
