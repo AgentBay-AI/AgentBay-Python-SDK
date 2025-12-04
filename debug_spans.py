@@ -1,11 +1,19 @@
 import sys
 import time
 import json
+from dataclasses import dataclass
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+
+# Dummy Response object to satisfy OTel SDK
+@dataclass
+class MockResponse:
+    ok: bool = True
+    status_code: int = 200
+    text: str = "OK"
 
 # 1. Setup OTel with realistic Resource metadata
 resource = Resource.create({
@@ -17,24 +25,19 @@ resource = Resource.create({
 provider = TracerProvider(resource=resource)
 
 # Exporter 1: Console (Human Readable)
-console_processor = SimpleSpanProcessor(ConsoleSpanExporter())
-provider.add_span_processor(console_processor)
+# console_processor = SimpleSpanProcessor(ConsoleSpanExporter())
+# provider.add_span_processor(console_processor)
 
 # Exporter 2: OTLP JSON (Strict Backend Format)
-# We override the Exporter to intercept the payload before it sends
 class DebugOTLPExporter(OTLPSpanExporter):
-    def _export(self, serialized_data):
-        # serialized_data is the Protobuf bytes
-        # We can decode it to verify the structure if we have the Protobuf classes,
-        # or just trust that this binary blob IS the OTLP payload.
-        # To print JSON, we need to decode it.
-        
+    def _export(self, serialized_data, *args, **kwargs):
         try:
             from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import ExportTraceServiceRequest
             from google.protobuf.json_format import MessageToJson
             
             request = ExportTraceServiceRequest()
             request.ParseFromString(serialized_data)
+            
             json_output = MessageToJson(request)
             
             print("\n" + "="*50)
@@ -42,13 +45,12 @@ class DebugOTLPExporter(OTLPSpanExporter):
             print("="*50)
             print(json_output)
             print("="*50 + "\n")
-        except ImportError:
-            print("\n[NOTE] Could not import Protobuf libraries to pretty-print JSON.")
-            print("But rest assured, the binary payload size is:", len(serialized_data), "bytes\n")
+            
+        except Exception as e:
+            print(f"\n[ERROR] Failed to decode protobuf: {e}")
 
-        return trace.SpanExporter.export(self, []) # No-op
+        return MockResponse()
 
-# Point to dummy endpoint
 otlp_processor = SimpleSpanProcessor(DebugOTLPExporter(endpoint="http://dummy"))
 provider.add_span_processor(otlp_processor)
 
