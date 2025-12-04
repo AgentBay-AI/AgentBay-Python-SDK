@@ -1,9 +1,11 @@
 import sys
 import time
+import json
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
 # 1. Setup OTel with realistic Resource metadata
 resource = Resource.create({
@@ -13,10 +15,44 @@ resource = Resource.create({
 })
 
 provider = TracerProvider(resource=resource)
-processor = SimpleSpanProcessor(ConsoleSpanExporter())
-provider.add_span_processor(processor)
-trace.set_tracer_provider(provider)
 
+# Exporter 1: Console (Human Readable)
+console_processor = SimpleSpanProcessor(ConsoleSpanExporter())
+provider.add_span_processor(console_processor)
+
+# Exporter 2: OTLP JSON (Strict Backend Format)
+# We override the Exporter to intercept the payload before it sends
+class DebugOTLPExporter(OTLPSpanExporter):
+    def _export(self, serialized_data):
+        # serialized_data is the Protobuf bytes
+        # We can decode it to verify the structure if we have the Protobuf classes,
+        # or just trust that this binary blob IS the OTLP payload.
+        # To print JSON, we need to decode it.
+        
+        try:
+            from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import ExportTraceServiceRequest
+            from google.protobuf.json_format import MessageToJson
+            
+            request = ExportTraceServiceRequest()
+            request.ParseFromString(serialized_data)
+            json_output = MessageToJson(request)
+            
+            print("\n" + "="*50)
+            print("  ACTUAL OTLP JSON PAYLOAD (What Backend Receives)  ")
+            print("="*50)
+            print(json_output)
+            print("="*50 + "\n")
+        except ImportError:
+            print("\n[NOTE] Could not import Protobuf libraries to pretty-print JSON.")
+            print("But rest assured, the binary payload size is:", len(serialized_data), "bytes\n")
+
+        return trace.SpanExporter.export(self, []) # No-op
+
+# Point to dummy endpoint
+otlp_processor = SimpleSpanProcessor(DebugOTLPExporter(endpoint="http://dummy"))
+provider.add_span_processor(otlp_processor)
+
+trace.set_tracer_provider(provider)
 tracer = trace.get_tracer("agentbay.debug")
 
 # 2. Simulate a Complex Agent Workflow
@@ -27,16 +63,13 @@ def simulate_openai_call(prompt):
         span.set_attribute("llm.request.model", "gpt-4")
         span.set_attribute("llm.request.messages", f"[{{'role': 'user', 'content': '{prompt}'}}]")
         
-        # Simulate network delay
         time.sleep(0.2)
         
-        # Record Response
         response_content = "Here is a summary of your data..."
         span.set_attribute("llm.response.content", response_content)
         span.set_attribute("llm.usage.prompt_tokens", 50)
         span.set_attribute("llm.usage.completion_tokens", 20)
         span.set_attribute("llm.usage.total_tokens", 70)
-        
         return response_content
 
 def agent_workflow(user_query):
@@ -47,23 +80,15 @@ def agent_workflow(user_query):
         
         print(f"Agent processing: {user_query}")
         
-        # Step 1: Search
         with tracer.start_as_current_span("tool.search") as tool_span:
             tool_span.set_attribute("tool.name", "google_search")
             time.sleep(0.1)
             tool_span.set_attribute("tool.result", "Found 5 financial reports.")
         
-        # Step 2: LLM
         result = simulate_openai_call(user_query)
-        
         span.set_attribute("output.result", result)
 
 # 3. Run the Simulation
 print("--- SIMULATING REALISTIC AGENT TRACE ---")
 agent_workflow("Analyze AAPL stock performance")
 print("--- DONE ---")
-print("\nBackend will receive:")
-print("1. A parent span 'agent.run'")
-print("2. A child span 'tool.search'")
-print("3. A child span 'openai.chat.completions.create'")
-print("All linked by the same trace_id.")
